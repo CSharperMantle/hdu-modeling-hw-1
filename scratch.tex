@@ -1,0 +1,193 @@
+%!TeX program = xelatex
+
+\documentclass[]{ctexart}
+
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{bm}
+\usepackage[
+backend=bibtex,
+style=numeric,
+sorting=none
+]{biblatex}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usepackage{pgfplots}
+
+\pgfplotsset{compat=newest}
+\pgfplotsset{plot coordinates/math parser=false}
+\newlength\figureheight
+\newlength\figurewidth
+
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\lstdefinestyle{mystyle}{
+    numberstyle=\tiny\color{codegray},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    keepspaces=true
+    numbers=left,
+    numbersep=5pt,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=4
+}
+\lstset{style=mystyle}
+
+\title{Scratch}
+\author{Somebody}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+
+    To be filled.
+
+\end{abstract}
+
+\section{问题重述}
+
+\subsection{问题背景}
+
+待完成.
+
+\subsection{问题的符号化描述}
+
+给定包含 $n = 3k$ 个元素的实数向量 $\bm{\alpha}_i,$ 满足 $0.7 \le \bm{\alpha}_i \le 1.3,$ 现需要将其中元素重新排列为矩阵 $\bm{M} \in \mathbb{R}^{k \times 3},$ 试求解最优的排列方法, 使得其每行之和 $\sum_{j} \bm{M}_{ij}$ 的最小值最大化.
+
+\subsection{需解决的子问题}
+
+待完成.
+
+\section{符号与记号}
+
+待完成.
+
+\section{问题分析}
+
+在本问题中, $\bm{\alpha}$ 中的每个元素在 $\bm{M}$ 中恰好出现一次, 容易观察到该问题能够被抽象为基于优化理论的离散规划问题; 更进一步地, 该问题能够被简化为整数规划问题中地 0-1 离散优化问题. 对于每个元素 $\bm{\alpha}_i, $ 可以定义\textit{独热分配向量} $\bm{a} \in \left\{0,1\right\}^{k}$ 以表示其在 $\bm{M}$ 中的归属：
+\begin{equation}
+   \bm{a}_j = \begin{cases}
+       1 \thickspace \text{if}\ j = t,\\
+       0 \thickspace \text{otherwise},\\
+   \end{cases}
+\end{equation}
+其中 $j$ 表示 $\bm{M}$ 中的列下标, 即分组的索引.
+
+该问题的优化目标能够描述为如下的函数:
+\begin{equation}
+    f = \underset{\bm{X}}{\arg\max}\ \underset{j}{\min} \left\{\sum_{i=1}^{n} \bm{X}_{ij}\bm{\alpha}_{i}\right\},
+\end{equation}
+即最大化每个行向量中元素之和的最小值. 为了将这一 maximin 形式的规划问题转换为一线性规划问题, 我们引入辅助变量 $x' = \underset{j}{\max} \left\{-\sum_{i=1}^{n} \bm{X}_{ij}\bm{\alpha}_{i}\right\}.$ 那么, 问题能够转化为如下形式:
+\begin{gather*}
+    f = \underset{\bm{X}}{\arg\min} \left\{x'\right\}, \\
+    \text{subject to}\ \sum_{i=1}^{n} \bm{X}_{ij}\bm{\alpha}_{i} \le x' \thickspace \text{for all}\ j.
+\end{gather*}
+
+
+\subsection{子问题一分析}
+
+本子问题中所述``队长"的指派, 实际上将原问题转化为一个2列的排列问题, 而问题的优化目标变为使``队长"的能力与规划结果之和. 求解方法与上述讨论大致相同, 仅需要对约束条件和目标函数进行较少的修正.
+
+\subsection{子问题二分析}
+
+本子问题即属于上述描述的相同问题, 能够使用上述方式进行求解.
+
+\section{模型建立与求解}
+
+\subsection{子问题一} \label{subq_1}
+
+我们在此给出子问题一的完整建模过程. 在如下讨论中, 我们设``队长"元素处于向量 $\bm{\alpha}_{\mathrm{c}} \in \mathbb{R}^{k \times 1}$ 中, 而其余元素处于 $\bm{\alpha}_{\mathrm{m}} \in \mathbb{R}^{(n - k) \times 1}$ 中.
+
+\paragraph{决策变量} 基于上文对该问题属于2列排列问题的分析, 得到决策变量矩阵 $\bm{X} \in \left\{0,1\right\}^{(n - k) \times k},$ 以行先格式重新排列元素得到决策变量向量 $\bm{x}$ 以供求解.
+
+
+\paragraph{约束条件} 为了确保元素 ${\bm{\alpha}_{\mathrm{m}}}_i$ 在最终排列 $\bm{M}$ 中的唯一性, 以及满足 $\bm{M}$ 中每个行向量中元素个数限制, 我们有如下的约束条件:
+\begin{equation}
+    \left\{
+    \begin{array}{ll}
+        \sum_{j} \bm{X}_{ij} = 1, \thickspace \text{for every}\ i,\\
+        \sum_{i} \bm{X}_{ij} = 2, \thickspace \text{for every}\ j.\\
+    \end{array}
+    \right.
+    \label{subq_1_m1_cons}
+\end{equation}
+
+\paragraph{目标函数} 为了满足最大化行向量元素和最小值的优化目的, 有:
+\begin{equation}
+    f(\bm{\alpha}) = \underset{\bm{X}}{\arg\max}\ \underset{j}{\min} \left\{\sum_{i=1}^{n} \bm{X}_{ij}{\bm{\alpha}_{\mathrm{m}}}_{i}+{\bm{\alpha}_{\mathrm{c}}}_j\right\}.
+    \label{subq_1_m1_goal}
+\end{equation}
+
+按照前述的方法, 通过引入辅助变量 $x'$ 之后, 我们能够将模型化为一线性规划模型, 即如下 minimax 形式:
+\begin{gather*}
+f = \underset{\bm{X}}{\arg\min} \left\{x'\right\}, \\
+\text{subject to}\ \sum_{i=1}^{n} \bm{X}_{ij}{\bm{\alpha}_{\mathrm{m}}}_{i} \le x' + {\bm{\alpha}_{\mathrm{c}}}_j \thickspace \text{for all}\ j.
+\end{gather*}
+
+综合上述式 \eqref{subq_1_m1_cons}\ 和 \eqref{subq_1_m1_goal}\ 便能得到可以求解该子问题最优排列的模型 \textbf{M1}.
+
+\paragraph{实现与结果分析}
+
+我们使用 MATLAB 实现模型 \textbf{M1}, 实现代码见附录 \ref{appn_code}. 将题目附件中数据输入模型, 我们能得到如表所示的求解结果.
+
+待完成.
+
+\subsection{子问题二} \label{subq_2}
+
+子问题二符合上述讨论中的通用模型形式, 即对所有 $\bm{\alpha}$ 中元素进行排列. 因此, 该问题的建模方法是直接且清晰的.
+
+\paragraph{决策变量} 根据上述讨论, 不难得到决策变量矩阵 $\bm{X} \in \left\{0,1\right\}^{n \times k},$ 以行先格式重新排列元素得到决策变量向量 $\bm{x}$ 以供求解.
+
+\paragraph{约束条件} 我们采取与节 \ref{subq_1}\ 所述相似的建模方法, 建立如下的约束条件, 保证元素 $\bm{\alpha}_i$ 在最终排列 $\bm{M}$ 中的唯一性, 同时满足 $\bm{M}$ 每个行向量中元素个数的限制:
+\begin{equation}
+    \left\{
+    \begin{array}{ll}
+        \sum_{j} \bm{X}_{ij} = 1, \thickspace \text{for every}\ i,\\
+        \sum_{i} \bm{X}_{ij} = 3, \thickspace \text{for every}\ j.\\
+    \end{array}
+    \right.
+    \label{subq_2_m2_cons}
+\end{equation}
+
+\paragraph{目标函数} 由于本子问题中待排列元素为全体 $\bm{\alpha}$ 的成员, 我们能够得到如下略有简化的目标函数:
+\begin{equation}
+    f(\bm{\alpha}) = \underset{\bm{X}}{\arg\max}\ \underset{j}{\min} \left\{\sum_{i=1}^{n} \bm{X}_{ij}\bm{\alpha}_{i}\right\}.
+    \label{subq_2_m2_goal}
+\end{equation}
+
+按照上述方法引入辅助变量 $x'$ 之后, 能够得到如下 minimax 形式:
+\begin{gather*}
+f = \underset{\bm{X}}{\arg\min} \left\{x'\right\}, \\
+\text{subject to}\ \sum_{i=1}^{n} \bm{X}_{ij}\bm{\alpha}_{i} \le x' \thickspace \text{for all}\ j.
+\end{gather*}
+
+综合上述式 \eqref{subq_2_m2_cons}\ 和 \eqref{subq_2_m2_goal}\ 便能得到适用于该子问题的模型 \textbf{M2}.
+
+\paragraph{实现与结果分析}
+
+同样使用 MATLAB 实现模型 \textbf{M2}, 实现代码见附录 \ref{appn_code}. 我们可以得到如表所示的求解结果.
+
+待完成.
+
+\subsection{模型的优化}
+
+通用整数非线性规划问题计算量庞大. 在本问题中, 随着 $n$ 与 $k$ 的增大, 问题的解空间规模以 $\mathcal{O}(2^{nk})$ 的速度增长, 且该问题无法被简单地转化为线性规划问题, 因为在有 $\bm{X}_{ij} = 1/k$ 时, 即将所有 $\bm{\alpha}$ 均匀分配至所有组中时, 能够得到 $\bm{X} \in [0,1]^{n \times k}$ 下满足约束条件的全局最优解. 在上述求解过程中, 我们观察到MATLAB的求解器不能很高效地处理具有数据组B规模的输入. 在观察数据后, 我们提出了一种基于贪心策略的启发式算法 \textbf{M1'} 和 \textbf{M2'}, 能求得接近线性优化模型最优解的可行方案.
+
+该算法使用二维数组维护了每个组的当前状况, 循环地将当前未分配元素中的最大元素分配至当前数值和最小的组中. 该算法具有 $\mathcal{O}(n^2)$ 规模的运行时间, 在求解大量数据时具有优势.
+
+该算法对题设数据组B的求解结果如下表:
+
+待完成.
+
+\appendix
+
+\section{代码实现} \label{appn_code}
+
+待完成.
+
+\end{document}
